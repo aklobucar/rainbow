@@ -1,144 +1,114 @@
-var blobs = [];
-var colors;
-let variation = 0;
-let xScale, yScale, centerX, centerY;
+// Neon Iris Gate v2 — Detailed Mechanical Aperture
+// by Tristan
+// Interlocking neon rings that open/close with depth and motion
 
-//auto change
-let changeDuration = 3000;
-let lastChange = 0;
+let particles = [];
+let t = 0;
 
 function setup() {
-	createCanvas(windowWidth, windowHeight);
-	textAlign(CENTER, CENTER);
-	
-	xScale = width/20;
-	yScale = height/20*(width/height);
-	
-	centerX = width/2;
-	centerY = height/2;
-	
-	colors = [color("#581845"), color("#900C3F"), color("#C70039"), color("#FF5733"), color("#FFC30F")];
+  createCanvas(1200, 600);
+  colorMode(HSB);
+  angleMode(DEGREES);
+  noStroke();
+
+  // starfield / depth particles
+  for (let i = 0; i < 400; i++) {
+    particles.push({
+      x: random(-width, width),
+      y: random(-height, height),
+      z: random(width),
+      hue: random([190, 260, 315])
+    });
+  }
 }
 
 function draw() {
-	/*
-	//DEBUG
-	textSize(20);
-	noStroke();
-	fill(255);
-	ellipse(centerX, centerY, 60, 60);
-	fill(0);
-	text(variation, centerX, centerY-10);
-	text(length, centerX, centerY+10);
-	*/
-	
-	if(mouseIsPressed){
-		for(let i = 0; i < 20; i++){
-			let x = mouseX + random(-100, 100);
-			let y = mouseY + random(-100, 100);
-			var blob = {
-				x : getXPos(x),
-				y : getYPos(y),
-				size : random(1, 5),
-				lastX : x,
-				lastY : y,
-				color : colors[floor(random(colors.length))],
-				direction : random(0.1, 1) * (random() > 0.5 ? 1 : -1)
-			};
-			blobs.push(blob);
-		}
-	}
-	
-	var length = blobs.length;
-	if(length == 0){
-		background("#1a0633");
-		noStroke();
-		fill(255);
-		textSize(40);
-		text("Press to emmit particles", centerX, centerY);
-		return;
-	}
-	
-	noStroke();
-	fill(26, 6, 51, 10);
-	rect(0, 0, width, height);
-	
-	//auto change
-	let time = millis();
-	if(time - lastChange > changeDuration) {
-		lastChange = time;
-		variation++;
-		if(variation>11) variation = 0;
-	}
+  background(0, 0.08);
+  translate(width / 2, height / 2);
 
-	var stepsize = deltaTime*0.002;
-	for(var i = length-1; i >= 0; i--){
-		let blob = blobs[i];
+  let speed = 25;
 
-		var x = getSlopeX(blob.x, blob.y);
-		var y = getSlopeY(blob.x, blob.y);
-		blob.x += blob.direction * x * stepsize;
-		blob.y += blob.direction * y * stepsize;
-		
-		x = getXPrint(blob.x);
-		y = getYPrint(blob.y);
-		stroke(blob.color);
-		strokeWeight(blob.size);
-		line(x, y, blob.lastX, blob.lastY);
-		blob.lastX = x;
-		blob.lastY = y;
-		
-		const border = 200;
-		if(x < -border || y < -border || x > width+border || y > height+border){
-			blobs.splice(i,1);
-		}
-	}
-}
+  // ✨ background star particles (depth)
+  for (let p of particles) {
+    p.z -= speed;
+    if (p.z < 1) {
+      p.z = width;
+      p.x = random(-width, width);
+      p.y = random(-height, height);
+    }
+    let sx = map(p.x / p.z, 0, 1, 0, width);
+    let sy = map(p.y / p.z, 0, 1, 0, height);
+    let size = map(p.z, 0, width, 5, 0);
+    fill(p.hue, 100, 100, 0.7);
+    ellipse(sx - width / 2, sy - height / 2, size);
+  }
 
-function getSlopeY(x, y){
-	switch(variation){
-		case 0:return Math.sin(x);
-		case 1:return Math.sin(x*5)*y*0.3;
-		case 2:return Math.cos(x*y);
-		case 3:return Math.sin(x)*Math.cos(y);
-		case 4:return Math.cos(x)*y*y;
-		case 5:return Math.log(Math.abs(x))*Math.log(Math.abs(y));
-		case 6:return Math.tan(x)*Math.cos(y);
-		case 7:return -Math.sin(x*0.1)*3;//orbit
-		case 8:return (x-x*x*x)*0.01;//two orbits
-		case 9:return -Math.sin(x);
-		case 10:return -y-Math.sin(1.5*x) + 0.7;
-		case 11:return Math.sin(x)*Math.cos(y);
-	}
-}
-	
-function getSlopeX(x,y){
-	switch(variation){
-		case 0:return Math.cos(y);
-		case 1:return Math.cos(y*5)*x*0.3;
-		case 2: 
-		case 3: 
-		case 4: 
-		case 5: 
-		case 6:return 1;
-		case 7:return Math.sin(y*0.1)*3;//orbit
-		case 8:return y/3;//two orbits
-		case 9:return -y;		
-		case 10:return -1.5*y;
-		case 11:return Math.sin(y)*Math.cos(x);
-	}
-}
+  //  Iris parameters
+  let openAmount = sin(frameCount * 2) * 0.5 + 0.5; // aperture
+  let blades = 16;
+  let baseRadius = 300;
+  let innerRadius = 60 + openAmount * 120;
+  let ringHue = (frameCount * 2) % 360;
 
-function getXPos(x){
-	return (x-centerX)/xScale;
-}
-function getYPos(y){
-	return (y-centerY)/yScale;
-}
+  push();
+  rotate(frameCount * 0.3);
 
-function getXPrint(x){
-	return xScale*x+centerX;
-}
-function getYPrint(y){
-	return yScale*y+centerY;
+  //  Outer rotating segmented ring (slow)
+  noFill();
+  strokeWeight(4);
+  for (let r = baseRadius; r < baseRadius + 60; r += 20) {
+    let rotOffset = sin(t * 100 + r) * 10;
+    stroke((ringHue + r * 0.4) % 360, 100, 100, 0.6);
+    beginShape();
+    for (let a = 0; a < 360; a += 10) {
+      let x = (r + sin(a * 3 + frameCount * 0.5) * 5) * cos(a + rotOffset);
+      let y = (r + sin(a * 3 + frameCount * 0.5) * 5) * sin(a + rotOffset);
+      vertex(x, y);
+    }
+    endShape(CLOSE);
+  }
+
+  // Mechanical iris blades
+  for (let i = 0; i < blades; i++) {
+    let startAngle = i * (360 / blades);
+    let endAngle = startAngle + (360 / blades) * 0.6;
+    let shift = sin(frameCount * 2 + i * 20) * 10;
+    let hue = (ringHue + i * 20) % 360;
+    fill(hue, 100, 100, 0.7);
+    arc(0, 0, baseRadius * 2 + shift, baseRadius * 2 + shift, startAngle, endAngle, PIE);
+  }
+
+  // Inner rotating energy rings (parallax illusion)
+  strokeWeight(3);
+  noFill();
+  for (let i = 0; i < 3; i++) {
+    let r = innerRadius + i * 40 + sin(frameCount * 3 + i * 60) * 10;
+    let hue = (ringHue + i * 60) % 360;
+    stroke(hue, 100, 100, 0.5);
+    rotate(sin(frameCount * 0.5 + i * 30) * 2);
+    ellipse(0, 0, r * 2);
+  }
+
+  //  Shading & depth (gives 3D illusion)
+  noStroke();
+  for (let i = 0; i < 10; i++) {
+    let fade = map(i, 0, 10, 0.6, 0);
+    fill((ringHue + i * 10) % 360, 90, 100, fade * 0.4);
+    ellipse(0, 0, (innerRadius + i * 15) * 2);
+  }
+
+  //  Central void (energy hole)
+  fill(0, 0, 0, 1);
+  ellipse(0, 0, innerRadius * 1.6);
+
+  //  Energy flare and glow
+  blendMode(ADD);
+  for (let i = 0; i < 5; i++) {
+    fill((ringHue + i * 50) % 360, 90, 100, 0.08);
+    ellipse(0, 0, baseRadius * 2.5 + i * 60 + sin(t * 8) * 20);
+  }
+  blendMode(BLEND);
+  pop();
+
+  t += 0.01;
 }
