@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>rainbow</title>
-</head>
-<body>
-
-  <!-- Load p5.js library -->
+  <link rel="stylesheet" href="../style.css">
   <script src="libraries/p5.js"></script>
+  <script src="libraries/sketch.js" defer></script>
+</head>
 
-  <!-- Load p5.sound if your sketch uses it -->
-  <script src="libraries/p5.sound.min.js"></script>
-
-  <!-- Load your sketch -->
-  <script src="libraries/sketch.js"></script>
-
+<body>
+  <main>
+    Tristan's Work<p>
+  </main>
+  <audio id="background-audio" src="your-audio-file.mp3"></audio>
+  <script>
+    window.onload = function() {
+      const audio = document.getElementById('background-audio');
+      audio.play().catch(error => {
+        console.error("Audio play failed:", error);
+      });
+    };
+  </script>
 </body>
 </html>
